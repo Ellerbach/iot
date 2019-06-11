@@ -15,7 +15,7 @@ namespace System.Device.Gpio.Tests
         private const int LedPin = 18;
         private const int OutputPin = 16;
         private const int InputPin = 12;
-        private static readonly int WaitMilliSeconds = 10;
+        private static readonly int WaitMilliSeconds = 1000;
 
         [Fact]
         public void ControllerCanTurnOnLEDs()
@@ -137,6 +137,7 @@ namespace System.Device.Gpio.Tests
             {
                 controller.OpenPin(InputPin, PinMode.Input);
                 controller.OpenPin(OutputPin, PinMode.Output);
+                controller.Write(OutputPin, PinValue.Low);
                 controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Rising, callback);
                 controller.Write(OutputPin, PinValue.High);
                 Thread.Sleep(WaitMilliSeconds);
@@ -166,6 +167,7 @@ namespace System.Device.Gpio.Tests
 
             void callback(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
             {
+                Debug.WriteLine("Oops I was called!");
                 wasCalled = true;
             }
         }
@@ -216,54 +218,57 @@ namespace System.Device.Gpio.Tests
         [Fact]
         public void AddCallbackRemoveAllCallbackTest()
         {
-            int risingEventOccuredCount = 0, fallingEventOccuredCount = 0;
-            using (GpioController controller = new GpioController(GetTestNumberingScheme(), GetTestDriver()))
+            RetryHelper.Execute(() =>
             {
-                controller.OpenPin(InputPin, PinMode.Input);
-                controller.OpenPin(OutputPin, PinMode.Output);
-                controller.Write(OutputPin, PinValue.Low);
-
-                controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback1);
-                controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback2);
-                controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback3);
-                controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Rising, callback4);
-               
-                controller.Write(OutputPin, PinValue.High);
-                Thread.Sleep(WaitMilliSeconds);
-
-                controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback1);
-                controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback2);
-                controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback3);
-                controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback4);
-
-                Thread.Sleep(WaitMilliSeconds);
-                controller.Write(OutputPin, PinValue.Low);
-                Thread.Sleep(WaitMilliSeconds);
-                controller.Write(OutputPin, PinValue.High);
-
-                Assert.Equal(1, risingEventOccuredCount);
-                Assert.Equal(0, fallingEventOccuredCount);
-
-                void callback1(object sender, PinValueChangedEventArgs e)
+                int risingEventOccuredCount = 0, fallingEventOccuredCount = 0;
+                using (GpioController controller = new GpioController(GetTestNumberingScheme(), GetTestDriver()))
                 {
-                    fallingEventOccuredCount++;
-                }
+                    controller.OpenPin(InputPin, PinMode.Input);
+                    controller.OpenPin(OutputPin, PinMode.Output);
+                    controller.Write(OutputPin, PinValue.Low);
 
-                void callback2(object sender, PinValueChangedEventArgs e)
-                {
-                    fallingEventOccuredCount++;
-                }
+                    controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback1);
+                    controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback2);
+                    controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Falling, callback3);
+                    controller.RegisterCallbackForPinValueChangedEvent(InputPin, PinEventTypes.Rising, callback4);
 
-                void callback3(object sender, PinValueChangedEventArgs e)
-                {
-                    fallingEventOccuredCount++;
-                }
+                    controller.Write(OutputPin, PinValue.High);
+                    Thread.Sleep(WaitMilliSeconds);
 
-                void callback4(object sender, PinValueChangedEventArgs e)
-                {
-                    risingEventOccuredCount++;
+                    controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback1);
+                    controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback2);
+                    controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback3);
+                    controller.UnregisterCallbackForPinValueChangedEvent(InputPin, callback4);
+
+                    Thread.Sleep(WaitMilliSeconds);
+                    controller.Write(OutputPin, PinValue.Low);
+                    Thread.Sleep(WaitMilliSeconds);
+                    controller.Write(OutputPin, PinValue.High);
+
+                    Assert.Equal(1, risingEventOccuredCount);
+                    Assert.Equal(0, fallingEventOccuredCount);
+
+                    void callback1(object sender, PinValueChangedEventArgs e)
+                    {
+                        fallingEventOccuredCount++;
+                    }
+
+                    void callback2(object sender, PinValueChangedEventArgs e)
+                    {
+                        fallingEventOccuredCount++;
+                    }
+
+                    void callback3(object sender, PinValueChangedEventArgs e)
+                    {
+                        fallingEventOccuredCount++;
+                    }
+
+                    void callback4(object sender, PinValueChangedEventArgs e)
+                    {
+                        risingEventOccuredCount++;
+                    }
                 }
-            }
+            });
         }
 
         [Fact]
