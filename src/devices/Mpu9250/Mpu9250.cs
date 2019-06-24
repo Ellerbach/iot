@@ -2,22 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Ak8963;
+using Iot.Device.Ak8963;
 using Iot.Units;
 using System;
 using System.Buffers.Binary;
-using System.Collections.Specialized;
 using System.Device;
 using System.Device.I2c;
-using System.Dynamic;
 using System.IO;
-using System.Linq.Expressions;
-using System.Net.Http.Headers;
 using System.Numerics;
 using System.Threading;
 
-namespace Mpu9250
+namespace Iot.Device.Mpu9250
 {
+    /// <summary>
+    /// MPU9250 class. MPU9250 has an embedded gyroscope, accelerometer and temperature. It does offers a magnetometer thru an embedded AK8963.
+    /// </summary>
     public class Mpu9250 : IDisposable
     {
         private const float Adc = 0x8000;
@@ -217,9 +216,9 @@ namespace Mpu9250
         /// <summary>
         /// Set or get the accelerometer low power mode
         /// </summary>
-        public AccelerometerLowPowerMode AccelerometerLowPowerMode
+        public AccelerometerLowPowerFrequency AccelerometerLowPowerFrequency
         {
-            get { return (AccelerometerLowPowerMode)ReadByte(Register.LP_ACCEL_ODR); }
+            get { return (AccelerometerLowPowerFrequency)ReadByte(Register.LP_ACCEL_ODR); }
             set { WriteRegister(Register.LP_ACCEL_ODR, (byte)value); }
         }
 
@@ -369,11 +368,11 @@ namespace Mpu9250
         /// Setup the Wake On Motion. This mode generate a rising signal on pin INT
         /// You can catch it with a normal GPIO and place an interruption on it if supprted
         /// Reading the sensor won't give any value until it wakes up preriodically
-        /// Only Accelerator data is availablein this mode
+        /// Only Accelerometer data is available in this mode
         /// </summary>
         /// <param name="magnetometerThreshold"></param>
-        /// <param name="acceleratorLowPower"></param>
-        public void SetWakeOnMotion(uint magnetometerThreshold, AcceleratorLowPowerFrequency acceleratorLowPower)
+        /// <param name="AccelerometerLowPowerFrequency"></param>
+        public void SetWakeOnMotion(uint magnetometerThreshold, AccelerometerLowPowerFrequency accelerometerLowPowerFrequency)
         {
             // Using documentation page 31 of Product Specification to setup
             _wakeOnMotion = true;
@@ -391,7 +390,7 @@ namespace Mpu9250
             // Remove the Gyroscope
             WriteRegister(Register.PWR_MGMT_2, (byte)(DisableModes.DisableGyroscopeX | DisableModes.DisableGyroscopeY | DisableModes.DisableGyroscopeZ));
             // ACCEL_CONFIG 2 (0x1D) set ACCEL_FCHOICE_B = 0 and A_DLPFCFG[2:0]=1(b001)
-            // Bandwidth for Accelerator to 184Hz
+            // Bandwidth for Accelerometer to 184Hz
             AccelerometerBandwidth = AccelerometerBandwidth.Bandwidth0184Hz;
             // Enable Motion Interrupt
             //  In INT_ENABLE (0x38), set the whole register to 0x40 to enable motion interrupt only
@@ -404,7 +403,7 @@ namespace Mpu9250
             WriteRegister(Register.WOM_THR, (byte)magnetometerThreshold);
             // Set Frequency of Wake-up:
             // In LP_ACCEL_ODR (0x1E), set Lposc_clksel[3:0] = 0.24Hz ~ 500Hz
-            WriteRegister(Register.LP_ACCEL_ODR, (byte)acceleratorLowPower);
+            WriteRegister(Register.LP_ACCEL_ODR, (byte)accelerometerLowPowerFrequency);
             // Enable Cycle Mode (AccelLow Power Mode):
             // In PWR_MGMT_1 (0x6B) make CYCLE =1
             WriteRegister(Register.PWR_MGMT_1, 0b0010_0000);
@@ -599,7 +598,7 @@ namespace Mpu9250
             Vector3 acceBias = new Vector3();
 
             Reset();
-            // Enable accelerator and gyroscope
+            // Enable accelrometer and gyroscope
             DisableModes = DisableModes.DisableNone;
             Thread.Sleep(200);
             // Disable all interrupts
@@ -791,7 +790,7 @@ namespace Mpu9250
             Vector3 accSelfTest = new Vector3();
             Vector3 gyroFactoryTrim = new Vector3();
             Vector3 accFactoryTrim = new Vector3();
-            // Tests done with slower GyroScale and Accelerator so 2G so value is 0 in both cases
+            // Tests done with slower GyroScale and Accelerometer so 2G so value is 0 in both cases
             byte gyroAccScale = 0;
 
             // Setup the registers for Gyscope as in documentation 
@@ -885,7 +884,7 @@ namespace Mpu9250
             {
                 gyroAvegage.Z = Math.Abs(gyroSelfTestAverage.Z - gyroAvegage.Z);
             }
-            // Accelerator
+            // Accelerometer
             if (accFactoryTrim.X != 0)
             {
                 accAverage.X = (accSelfTestAverage.X - accAverage.X) / accFactoryTrim.X;

@@ -1,9 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace Mpu9250
+using System;
+
+namespace Iot.Device.Mpu9250
 {
+    /// <summary>
+    /// FIFO modes used to select which data from accelerometer, gyroscope and I2C slaves
+    /// </summary>
     [Flags]
     public enum FifoModes
     {

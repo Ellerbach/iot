@@ -1,9 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace Ak8963
+namespace Iot.Device.Ak8963
 {
+    /// <summary>
+    /// Registers of the AK8963. This class is public as 
+    /// need to be accessed when this device is embedded into another one
+    /// like in the MPU9250
+    /// </summary>
     public enum Register
     {
         WIA = 0x00,

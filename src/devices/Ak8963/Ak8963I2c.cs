@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Device.I2c;
-using System.Text;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-namespace Ak8963
+using System;
+using System.Device.I2c;
+
+namespace Iot.Device.Ak8963
 {
+    /// <summary>
+    /// Default I2C interface for the AK8963
+    /// </summary>
     public class Ak8963I2c : Ak8963Interface
     {
         public override byte ReadByte(I2cDevice i2cDevice, Register reg)
